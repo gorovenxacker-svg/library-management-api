@@ -1,0 +1,16 @@
+namespace Library.Core;
+
+public sealed class Author
+{
+    public Author(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            throw new ArgumentException("Author name cannot be empty.", nameof(name));
+        }
+
+        Name = name;
+    }
+
+    public string Name { get; }
+}
