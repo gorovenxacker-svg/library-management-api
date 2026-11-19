@@ -81,7 +81,7 @@ public sealed class CatalogService
 
         if (await _repository.InventoryNumberExistsAsync(copy.InventoryNumber))
         {
-            throw new InvalidOperationException("Inventory number already exists.");
+            throw new DuplicateInventoryNumberException(copy.InventoryNumber);
         }
 
         await _repository.AddBookCopyAsync(copy);

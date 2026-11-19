@@ -4,9 +4,19 @@ public interface ICatalogRepository
 {
     Task<Author?> GetAuthorAsync(Guid id);
 
+    Task<IReadOnlyList<Author>> GetAuthorsAsync();
+
     Task<Category?> GetCategoryAsync(Guid id);
 
+    Task<IReadOnlyList<Category>> GetCategoriesAsync();
+
     Task<Book?> GetBookAsync(Guid id);
+
+    Task<IReadOnlyList<Book>> GetBooksAsync();
+
+    Task<BookCopy?> GetBookCopyAsync(Guid id);
+
+    Task<IReadOnlyList<BookCopy>> GetBookCopiesAsync();
 
     Task<bool> InventoryNumberExistsAsync(string inventoryNumber);
 

@@ -3,9 +3,68 @@
 GET {{Library.Api_HostAddress}}/openapi/v1.json
 Accept: application/json
 
-###
+### Create author
+POST {{Library.Api_HostAddress}}/api/authors
+Content-Type: application/json
 
-GET {{Library.Api_HostAddress}}/weatherforecast/
+{
+  "name": "Леся Українка"
+}
+
+### List authors
+GET {{Library.Api_HostAddress}}/api/authors
 Accept: application/json
 
-###
+### Get author (replace ID)
+GET {{Library.Api_HostAddress}}/api/authors/00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+### Create category
+POST {{Library.Api_HostAddress}}/api/categories
+Content-Type: application/json
+
+{
+  "name": "Драма"
+}
+
+### List categories
+GET {{Library.Api_HostAddress}}/api/categories
+Accept: application/json
+
+### Get category (replace ID)
+GET {{Library.Api_HostAddress}}/api/categories/00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+### Create book (replace IDs)
+POST {{Library.Api_HostAddress}}/api/books
+Content-Type: application/json
+
+{
+  "title": "Лісова пісня",
+  "categoryId": "00000000-0000-0000-0000-000000000000",
+  "authorIds": ["00000000-0000-0000-0000-000000000000"]
+}
+
+### List books
+GET {{Library.Api_HostAddress}}/api/books
+Accept: application/json
+
+### Get book (replace ID)
+GET {{Library.Api_HostAddress}}/api/books/00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+### Create copy (replace bookId)
+POST {{Library.Api_HostAddress}}/api/books/00000000-0000-0000-0000-000000000000/copies
+Content-Type: application/json
+
+{
+  "inventoryNumber": "INV-001"
+}
+
+### List copies
+GET {{Library.Api_HostAddress}}/api/copies
+Accept: application/json
+
+### Get copy (replace ID)
+GET {{Library.Api_HostAddress}}/api/copies/00000000-0000-0000-0000-000000000000
+Accept: application/json

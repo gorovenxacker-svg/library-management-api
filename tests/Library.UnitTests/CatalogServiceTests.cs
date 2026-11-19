@@ -110,7 +110,7 @@ public class CatalogServiceTests
     }
 
     [Fact]
-    public async Task AddCopyAsync_WithDuplicateInventoryNumber_ShouldThrowInvalidOperationExceptionWithoutSave()
+    public async Task AddCopyAsync_WithDuplicateInventoryNumber_ShouldThrowDuplicateInventoryNumberExceptionWithoutSave()
     {
         var repository = new InMemoryCatalogRepository();
         var category = await SeedCategory(repository, "Драма");
@@ -119,7 +119,7 @@ public class CatalogServiceTests
         await SeedCopy(repository, book, "INV-001");
         var service = new CatalogService(repository);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<DuplicateInventoryNumberException>(() =>
             service.AddCopyAsync(book.Id, "INV-001"));
 
         Assert.Equal(0, repository.SaveChangesCallCount);
@@ -162,7 +162,7 @@ public class CatalogServiceTests
         var initialCount = repository.BookCopies.Count;
         var service = new CatalogService(repository);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<DuplicateInventoryNumberException>(() =>
             service.AddCopyAsync(book.Id, "INV-001"));
 
         Assert.Equal(initialCount, repository.BookCopies.Count);
@@ -223,14 +223,39 @@ public class CatalogServiceTests
             return Task.FromResult(Authors.FirstOrDefault(author => author.Id == id));
         }
 
+        public Task<IReadOnlyList<Author>> GetAuthorsAsync()
+        {
+            return Task.FromResult<IReadOnlyList<Author>>(Authors);
+        }
+
         public Task<Category?> GetCategoryAsync(Guid id)
         {
             return Task.FromResult(Categories.FirstOrDefault(category => category.Id == id));
         }
 
+        public Task<IReadOnlyList<Category>> GetCategoriesAsync()
+        {
+            return Task.FromResult<IReadOnlyList<Category>>(Categories);
+        }
+
         public Task<Book?> GetBookAsync(Guid id)
         {
             return Task.FromResult(Books.FirstOrDefault(book => book.Id == id));
+        }
+
+        public Task<IReadOnlyList<Book>> GetBooksAsync()
+        {
+            return Task.FromResult<IReadOnlyList<Book>>(Books);
+        }
+
+        public Task<BookCopy?> GetBookCopyAsync(Guid id)
+        {
+            return Task.FromResult(BookCopies.FirstOrDefault(copy => copy.Id == id));
+        }
+
+        public Task<IReadOnlyList<BookCopy>> GetBookCopiesAsync()
+        {
+            return Task.FromResult<IReadOnlyList<BookCopy>>(BookCopies);
         }
 
         public Task<bool> InventoryNumberExistsAsync(string inventoryNumber)

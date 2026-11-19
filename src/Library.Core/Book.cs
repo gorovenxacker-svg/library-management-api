@@ -2,6 +2,14 @@ namespace Library.Core;
 
 public sealed class Book
 {
+    private readonly List<Author> _authors = new();
+
+    private Book()
+    {
+        Title = null!;
+        Category = null!;
+    }
+
     public Book(string title, Category category, IEnumerable<Author> authors)
     {
         if (string.IsNullOrWhiteSpace(title))
@@ -33,14 +41,14 @@ public sealed class Book
 
         Title = title;
         Category = category;
-        Authors = Array.AsReadOnly(authorList);
+        _authors.AddRange(authorList);
     }
 
     public Guid Id { get; private set; } = Guid.NewGuid();
 
-    public string Title { get; }
+    public string Title { get; private set; } = null!;
 
-    public Category Category { get; }
+    public Category Category { get; private set; } = null!;
 
-    public IReadOnlyCollection<Author> Authors { get; }
+    public IReadOnlyCollection<Author> Authors => _authors.AsReadOnly();
 }

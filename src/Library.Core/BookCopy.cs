@@ -2,6 +2,12 @@ namespace Library.Core;
 
 public sealed class BookCopy
 {
+    private BookCopy()
+    {
+        Book = null!;
+        InventoryNumber = null!;
+    }
+
     public BookCopy(Book book, string inventoryNumber)
     {
         if (book is null)
@@ -21,9 +27,9 @@ public sealed class BookCopy
 
     public Guid Id { get; private set; } = Guid.NewGuid();
 
-    public Book Book { get; }
+    public Book Book { get; private set; } = null!;
 
-    public string InventoryNumber { get; }
+    public string InventoryNumber { get; private set; } = null!;
 
     public BookCopyStatus Status { get; private set; }
 }

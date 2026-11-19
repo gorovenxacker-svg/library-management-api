@@ -2,6 +2,11 @@ namespace Library.Core;
 
 public sealed class Category
 {
+    private Category()
+    {
+        Name = null!;
+    }
+
     public Category(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
@@ -14,5 +19,5 @@ public sealed class Category
 
     public Guid Id { get; private set; } = Guid.NewGuid();
 
-    public string Name { get; }
+    public string Name { get; private set; } = null!;
 }

@@ -74,6 +74,20 @@ public class BookTests
     }
 
     [Fact]
+    public void Authors_ShouldBeReadOnly()
+    {
+        var category = new Category("Драма");
+        var author = new Author("Леся Українка");
+        var extraAuthor = new Author("Тарас Шевченко");
+        var book = new Book("Лісова пісня", category, new[] { author });
+
+        var authors = Assert.IsAssignableFrom<ICollection<Author>>(book.Authors);
+
+        Assert.Throws<NotSupportedException>(() => authors.Add(extraAuthor));
+        Assert.Single(book.Authors);
+    }
+
+    [Fact]
     public void CreateWithTwoAuthors_ShouldStoreBookData()
     {
         var title = "Лісова пісня";
