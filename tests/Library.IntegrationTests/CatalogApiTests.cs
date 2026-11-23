@@ -166,6 +166,59 @@ public sealed class CatalogApiTests
     }
 
     [Fact]
+    public async Task SearchBooks_ReturnsFilteredBooksAndAvailableOnlyResults()
+    {
+        using var factory = new TestApiFactory();
+        using var client = factory.CreateClient();
+
+        var firstAuthorResponse = await client.PostAsJsonAsync("/api/authors", new { name = "Леся Українка" });
+        var firstAuthor = await firstAuthorResponse.Content.ReadFromJsonAsync<AuthorResponse>(JsonOptions);
+        var secondAuthorResponse = await client.PostAsJsonAsync("/api/authors", new { name = "Оксана Лущевська" });
+        var secondAuthor = await secondAuthorResponse.Content.ReadFromJsonAsync<AuthorResponse>(JsonOptions);
+        var categoryResponse = await client.PostAsJsonAsync("/api/categories", new { name = "Фентезі" });
+        var category = await categoryResponse.Content.ReadFromJsonAsync<CategoryResponse>(JsonOptions);
+
+        var matchingBookResponse = await client.PostAsJsonAsync(
+            "/api/books",
+            new
+            {
+                title = "Українська історія",
+                categoryId = category!.Id,
+                authorIds = new[] { firstAuthor!.Id, secondAuthor!.Id }
+            });
+        var matchingBook = await matchingBookResponse.Content.ReadFromJsonAsync<BookResponse>(JsonOptions);
+        var otherBookResponse = await client.PostAsJsonAsync(
+            "/api/books",
+            new
+            {
+                title = "Інша історія",
+                categoryId = category.Id,
+                authorIds = new[] { firstAuthor.Id }
+            });
+        var otherBook = await otherBookResponse.Content.ReadFromJsonAsync<BookResponse>(JsonOptions);
+
+        var copyResponse = await client.PostAsJsonAsync(
+            $"/api/books/{matchingBook!.Id}/copies",
+            new { inventoryNumber = "INV-SEARCH-001" });
+        Assert.Equal(HttpStatusCode.Created, copyResponse.StatusCode);
+
+        var authorFilter = Uri.EscapeDataString("  ЛУЩЕВСЬКА ");
+        var filteredResponse = await client.GetAsync(
+            $"/api/books?title={Uri.EscapeDataString(" українська ")}&author={authorFilter}&category={Uri.EscapeDataString(" ФЕНТ ")}&availableOnly=true");
+        var filteredBooks = await filteredResponse.Content.ReadFromJsonAsync<List<BookResponse>>(JsonOptions);
+
+        Assert.Equal(HttpStatusCode.OK, filteredResponse.StatusCode);
+        Assert.Equal(matchingBook.Id, Assert.Single(filteredBooks!).Id);
+
+        var noMatchResponse = await client.GetAsync("/api/books?title=відсутня");
+        var noMatchBooks = await noMatchResponse.Content.ReadFromJsonAsync<List<BookResponse>>(JsonOptions);
+
+        Assert.Equal(HttpStatusCode.OK, noMatchResponse.StatusCode);
+        Assert.Empty(noMatchBooks!);
+        Assert.NotEqual(matchingBook.Id, otherBook!.Id);
+    }
+
+    [Fact]
     public async Task EfRepository_DuplicateSave_ThrowsDuplicateInventoryNumberException()
     {
         using var factory = new TestApiFactory();

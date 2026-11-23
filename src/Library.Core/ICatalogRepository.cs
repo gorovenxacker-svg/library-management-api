@@ -18,6 +18,18 @@ public interface ICatalogRepository
 
     Task<IReadOnlyList<BookCopy>> GetBookCopiesAsync();
 
+    Task<Reader?> GetReaderAsync(Guid id);
+
+    Task<Loan?> GetLoanAsync(Guid id);
+
+    Task<IReadOnlyList<Loan>> GetLoansForReaderAsync(Guid readerId);
+
+    Task<IReadOnlyList<Loan>> GetOverdueLoansAsync(DateTime nowUtc);
+
+    Task<Reservation?> GetReservationAsync(Guid id);
+
+    Task<Reservation?> GetActiveReservationForCopyAsync(Guid copyId);
+
     Task<bool> InventoryNumberExistsAsync(string inventoryNumber);
 
     Task AddAuthorAsync(Author author);
@@ -27,6 +39,12 @@ public interface ICatalogRepository
     Task AddBookAsync(Book book);
 
     Task AddBookCopyAsync(BookCopy bookCopy);
+
+    Task AddReaderAsync(Reader reader);
+
+    Task AddLoanAsync(Loan loan);
+
+    Task AddReservationAsync(Reservation reservation);
 
     Task SaveChangesAsync();
 }

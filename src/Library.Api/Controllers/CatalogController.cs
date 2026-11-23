@@ -101,9 +101,13 @@ public sealed class CatalogController(
     }
 
     [HttpGet("books")]
-    public async Task<ActionResult<IReadOnlyList<BookResponse>>> GetBooks()
+    public async Task<ActionResult<IReadOnlyList<BookResponse>>> GetBooks(
+        [FromQuery] string? title = null,
+        [FromQuery] string? author = null,
+        [FromQuery] string? category = null,
+        [FromQuery] bool availableOnly = false)
     {
-        var books = await repository.GetBooksAsync();
+        var books = await catalogService.SearchBooksAsync(title, author, category, availableOnly);
         return Ok(books.Select(ToResponse).ToList());
     }
 

@@ -184,6 +184,84 @@ public class CatalogServiceTests
         Assert.Equal("inv-001", copy.InventoryNumber);
     }
 
+    [Fact]
+    public async Task SearchBooksAsync_ShouldCombineTrimmedFiltersWithAnd()
+    {
+        var repository = new InMemoryCatalogRepository();
+        var category = await SeedCategory(repository, "Драма");
+        var author = await SeedAuthor(repository, "Леся Українка");
+        await SeedBook(repository, "Лісова пісня", category, author);
+        await SeedBook(repository, "Кайдашева сім'я", category, author);
+        var service = new CatalogService(repository);
+
+        var result = await service.SearchBooksAsync("  ЛІСОВА ", "  УКРАЇНКА ", " ДРАМ ");
+
+        var book = Assert.Single(result);
+        Assert.Equal("Лісова пісня", book.Title);
+    }
+
+    [Fact]
+    public async Task SearchBooksAsync_ShouldMatchUnicodeAndAnyAuthor()
+    {
+        var repository = new InMemoryCatalogRepository();
+        var category = await SeedCategory(repository, "Фентезі");
+        var firstAuthor = await SeedAuthor(repository, "Марія Матіос");
+        var secondAuthor = await SeedAuthor(repository, "Оксана Лущевська");
+        var book = new Book("Українська історія", category, new[] { firstAuthor, secondAuthor });
+        await repository.AddBookAsync(book);
+        var service = new CatalogService(repository);
+
+        var result = await service.SearchBooksAsync(author: "ЛУЩЕВСЬКА");
+
+        Assert.Same(book, Assert.Single(result));
+    }
+
+    [Fact]
+    public async Task SearchBooksAsync_WithBlankFilters_ShouldIgnoreThem()
+    {
+        var repository = new InMemoryCatalogRepository();
+        var category = await SeedCategory(repository, "Драма");
+        var author = await SeedAuthor(repository, "Леся Українка");
+        var book = await SeedBook(repository, "Лісова пісня", category, author);
+        var service = new CatalogService(repository);
+
+        var result = await service.SearchBooksAsync(" ", "\t", "   ");
+
+        Assert.Same(book, Assert.Single(result));
+    }
+
+    [Fact]
+    public async Task SearchBooksAsync_WithNoMatchingFilters_ShouldReturnEmpty()
+    {
+        var repository = new InMemoryCatalogRepository();
+        var category = await SeedCategory(repository, "Драма");
+        var author = await SeedAuthor(repository, "Леся Українка");
+        await SeedBook(repository, "Лісова пісня", category, author);
+        var service = new CatalogService(repository);
+
+        var result = await service.SearchBooksAsync(title: "Немає такої книги");
+
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public async Task SearchBooksAsync_AvailableOnly_ShouldReturnBooksWithAvailableCopyOnce()
+    {
+        var repository = new InMemoryCatalogRepository();
+        var category = await SeedCategory(repository, "Драма");
+        var author = await SeedAuthor(repository, "Леся Українка");
+        var availableBook = await SeedBook(repository, "Лісова пісня", category, author);
+        await SeedCopy(repository, availableBook, "INV-001");
+        await SeedCopy(repository, availableBook, "INV-002");
+        await SeedBook(repository, "Кайдашева сім'я", category, author);
+        var service = new CatalogService(repository);
+
+        var result = await service.SearchBooksAsync(availableOnly: true);
+
+        var book = Assert.Single(result);
+        Assert.Same(availableBook, book);
+    }
+
     private static async Task<Category> SeedCategory(InMemoryCatalogRepository repository, string name)
     {
         var category = new Category(name);
@@ -216,6 +294,9 @@ public class CatalogServiceTests
         public List<Category> Categories { get; } = new();
         public List<Book> Books { get; } = new();
         public List<BookCopy> BookCopies { get; } = new();
+        public List<Reader> Readers { get; } = new();
+        public List<Loan> Loans { get; } = new();
+        public List<Reservation> Reservations { get; } = new();
         public int SaveChangesCallCount { get; private set; }
 
         public Task<Author?> GetAuthorAsync(Guid id)
@@ -258,6 +339,39 @@ public class CatalogServiceTests
             return Task.FromResult<IReadOnlyList<BookCopy>>(BookCopies);
         }
 
+        public Task<Reader?> GetReaderAsync(Guid id)
+        {
+            return Task.FromResult(Readers.FirstOrDefault(reader => reader.Id == id));
+        }
+
+        public Task<Loan?> GetLoanAsync(Guid id)
+        {
+            return Task.FromResult(Loans.FirstOrDefault(loan => loan.Id == id));
+        }
+
+        public Task<IReadOnlyList<Loan>> GetLoansForReaderAsync(Guid readerId)
+        {
+            return Task.FromResult<IReadOnlyList<Loan>>(Loans.Where(loan => loan.Reader.Id == readerId).ToList());
+        }
+
+        public Task<IReadOnlyList<Loan>> GetOverdueLoansAsync(DateTime nowUtc)
+        {
+            return Task.FromResult<IReadOnlyList<Loan>>(Loans
+                .Where(loan => loan.ReturnedAtUtc is null && loan.DueAtUtc < nowUtc)
+                .ToList());
+        }
+
+        public Task<Reservation?> GetReservationAsync(Guid id)
+        {
+            return Task.FromResult(Reservations.FirstOrDefault(reservation => reservation.Id == id));
+        }
+
+        public Task<Reservation?> GetActiveReservationForCopyAsync(Guid copyId)
+        {
+            return Task.FromResult(Reservations.FirstOrDefault(reservation =>
+                reservation.Copy.Id == copyId && reservation.Status == ReservationStatus.Active));
+        }
+
         public Task<bool> InventoryNumberExistsAsync(string inventoryNumber)
         {
             var exists = BookCopies.Any(copy =>
@@ -287,6 +401,24 @@ public class CatalogServiceTests
         public Task AddBookCopyAsync(BookCopy bookCopy)
         {
             BookCopies.Add(bookCopy);
+            return Task.CompletedTask;
+        }
+
+        public Task AddReaderAsync(Reader reader)
+        {
+            Readers.Add(reader);
+            return Task.CompletedTask;
+        }
+
+        public Task AddLoanAsync(Loan loan)
+        {
+            Loans.Add(loan);
+            return Task.CompletedTask;
+        }
+
+        public Task AddReservationAsync(Reservation reservation)
+        {
+            Reservations.Add(reservation);
             return Task.CompletedTask;
         }
 

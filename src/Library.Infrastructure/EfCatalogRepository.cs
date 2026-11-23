@@ -37,6 +37,50 @@ public sealed class EfCatalogRepository(LibraryDbContext dbContext) : ICatalogRe
             .Include(copy => copy.Book)
             .SingleOrDefaultAsync(copy => copy.Id == id);
 
+    public Task<Reader?> GetReaderAsync(Guid id) =>
+        dbContext.Readers.SingleOrDefaultAsync(reader => reader.Id == id);
+
+    public Task<Loan?> GetLoanAsync(Guid id) =>
+        dbContext.Loans
+            .Include(loan => loan.Reader)
+            .Include(loan => loan.Copy)
+            .ThenInclude(copy => copy.Book)
+            .SingleOrDefaultAsync(loan => loan.Id == id);
+
+    public async Task<IReadOnlyList<Loan>> GetLoansForReaderAsync(Guid readerId) =>
+        await dbContext.Loans
+            .AsNoTracking()
+            .Include(loan => loan.Reader)
+            .Include(loan => loan.Copy)
+            .ThenInclude(copy => copy.Book)
+            .Where(loan => loan.Reader.Id == readerId)
+            .OrderByDescending(loan => loan.IssuedAtUtc)
+            .ToListAsync();
+
+    public async Task<IReadOnlyList<Loan>> GetOverdueLoansAsync(DateTime nowUtc) =>
+        await dbContext.Loans
+            .AsNoTracking()
+            .Include(loan => loan.Reader)
+            .Include(loan => loan.Copy)
+            .ThenInclude(copy => copy.Book)
+            .Where(loan => loan.ReturnedAtUtc == null && loan.DueAtUtc < nowUtc)
+            .OrderBy(loan => loan.DueAtUtc)
+            .ToListAsync();
+
+    public Task<Reservation?> GetReservationAsync(Guid id) =>
+        dbContext.Reservations
+            .Include(reservation => reservation.Reader)
+            .Include(reservation => reservation.Copy)
+            .ThenInclude(copy => copy.Book)
+            .SingleOrDefaultAsync(reservation => reservation.Id == id);
+
+    public Task<Reservation?> GetActiveReservationForCopyAsync(Guid copyId) =>
+        dbContext.Reservations
+            .Include(reservation => reservation.Reader)
+            .Include(reservation => reservation.Copy)
+            .Where(reservation => reservation.Copy.Id == copyId && reservation.Status == ReservationStatus.Active)
+            .SingleOrDefaultAsync();
+
     public async Task<IReadOnlyList<BookCopy>> GetBookCopiesAsync() =>
         await dbContext.BookCopies
             .AsNoTracking()
@@ -59,11 +103,24 @@ public sealed class EfCatalogRepository(LibraryDbContext dbContext) : ICatalogRe
     public Task AddBookCopyAsync(BookCopy bookCopy) =>
         dbContext.BookCopies.AddAsync(bookCopy).AsTask();
 
+    public Task AddReaderAsync(Reader reader) =>
+        dbContext.Readers.AddAsync(reader).AsTask();
+
+    public Task AddLoanAsync(Loan loan) =>
+        dbContext.Loans.AddAsync(loan).AsTask();
+
+    public Task AddReservationAsync(Reservation reservation) =>
+        dbContext.Reservations.AddAsync(reservation).AsTask();
+
     public async Task SaveChangesAsync()
     {
         try
         {
             await dbContext.SaveChangesAsync();
+        }
+        catch (DbUpdateConcurrencyException exception)
+        {
+            throw new CirculationConcurrencyException("The copy was changed by another operation.", exception);
         }
         catch (DbUpdateException exception) when (IsInventoryNumberConstraint(exception))
         {

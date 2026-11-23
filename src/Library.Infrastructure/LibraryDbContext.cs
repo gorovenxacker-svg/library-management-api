@@ -13,6 +13,12 @@ public sealed class LibraryDbContext(DbContextOptions<LibraryDbContext> options)
 
     public DbSet<BookCopy> BookCopies => Set<BookCopy>();
 
+    public DbSet<Reader> Readers => Set<Reader>();
+
+    public DbSet<Loan> Loans => Set<Loan>();
+
+    public DbSet<Reservation> Reservations => Set<Reservation>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Author>(entity =>
@@ -50,11 +56,38 @@ public sealed class LibraryDbContext(DbContextOptions<LibraryDbContext> options)
             entity.HasKey(copy => copy.Id);
             entity.Property(copy => copy.InventoryNumber).IsRequired().UseCollation("BINARY");
             entity.Property(copy => copy.Status).IsRequired();
+            entity.Property(copy => copy.Version).IsRequired().IsConcurrencyToken();
             entity.HasIndex(copy => copy.InventoryNumber).IsUnique();
             entity.HasOne(copy => copy.Book)
                 .WithMany()
                 .HasForeignKey("BookId")
                 .IsRequired();
+        });
+
+        modelBuilder.Entity<Reader>(entity =>
+        {
+            entity.HasKey(reader => reader.Id);
+            entity.Property(reader => reader.Name).IsRequired();
+        });
+
+        modelBuilder.Entity<Loan>(entity =>
+        {
+            entity.HasKey(loan => loan.Id);
+            entity.Property(loan => loan.IssuedAtUtc).HasConversion<long>();
+            entity.Property(loan => loan.DueAtUtc).HasConversion<long>();
+            entity.Property(loan => loan.ReturnedAtUtc).HasConversion<long?>();
+            entity.HasOne(loan => loan.Reader).WithMany().HasForeignKey("ReaderId").IsRequired();
+            entity.HasOne(loan => loan.Copy).WithMany().HasForeignKey("CopyId").IsRequired();
+        });
+
+        modelBuilder.Entity<Reservation>(entity =>
+        {
+            entity.HasKey(reservation => reservation.Id);
+            entity.Property(reservation => reservation.CreatedAtUtc).HasConversion<long>();
+            entity.Property(reservation => reservation.ClosedAtUtc).HasConversion<long?>();
+            entity.Property(reservation => reservation.Status).IsRequired();
+            entity.HasOne(reservation => reservation.Reader).WithMany().HasForeignKey("ReaderId").IsRequired();
+            entity.HasOne(reservation => reservation.Copy).WithMany().HasForeignKey("CopyId").IsRequired();
         });
     }
 }
