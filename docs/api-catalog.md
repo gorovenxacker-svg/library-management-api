@@ -4,7 +4,7 @@
 
 1. Запустіть `Library.Api` як startup project.
 2. API створює SQLite-файл `library.db` за connection string `ConnectionStrings:Library`.
-3. Використовуйте `src/Library.Api/Library.Api.http` для HTTP-запитів. OpenAPI JSON доступний за `/openapi/v1.json` у Development; Swagger UI не встановлено.
+3. Використовуйте `src/Library.Api/Library.Api.http` для HTTP-запитів. OpenAPI JSON доступний за `/openapi/v1.json` у Development; Swagger UI доступний за /swagger/index.html. Розгорніть GET /api/books, натисніть Try it out, потім Execute.
 4. Integration tests запускаються окремо через Test Explorer і використовують ізольовану SQLite in-memory базу. Поточний блок SCRUM-8/9 додав тести циркуляції; їх запуск після внесених змін ще не підтверджувався.
 
 ## Endpoints
