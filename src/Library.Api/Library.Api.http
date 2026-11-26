@@ -3,9 +3,134 @@
 GET {{Library.Api_HostAddress}}/openapi/v1.json
 Accept: application/json
 
-###
+### Create author
+POST {{Library.Api_HostAddress}}/api/authors
+Content-Type: application/json
 
-GET {{Library.Api_HostAddress}}/weatherforecast/
+{
+  "name": "Леся Українка"
+}
+
+### List authors
+GET {{Library.Api_HostAddress}}/api/authors
 Accept: application/json
 
-###
+### Get author (replace ID)
+GET {{Library.Api_HostAddress}}/api/authors/00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+### Create category
+POST {{Library.Api_HostAddress}}/api/categories
+Content-Type: application/json
+
+{
+  "name": "Драма"
+}
+
+### List categories
+GET {{Library.Api_HostAddress}}/api/categories
+Accept: application/json
+
+### Get category (replace ID)
+GET {{Library.Api_HostAddress}}/api/categories/00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+### Create book (replace IDs)
+POST {{Library.Api_HostAddress}}/api/books
+Content-Type: application/json
+
+{
+  "title": "Лісова пісня",
+  "categoryId": "00000000-0000-0000-0000-000000000000",
+  "authorIds": ["00000000-0000-0000-0000-000000000000"]
+}
+
+### List books
+GET {{Library.Api_HostAddress}}/api/books
+Accept: application/json
+
+### Get book (replace ID)
+GET {{Library.Api_HostAddress}}/api/books/00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+### Search books by combined filters
+GET {{Library.Api_HostAddress}}/api/books?title=лісова&author=українка&category=драма&availableOnly=true
+Accept: application/json
+
+### Search books without filters (same collection behavior)
+GET {{Library.Api_HostAddress}}/api/books
+Accept: application/json
+
+### Create copy (replace bookId)
+POST {{Library.Api_HostAddress}}/api/books/00000000-0000-0000-0000-000000000000/copies
+Content-Type: application/json
+
+{
+  "inventoryNumber": "INV-001"
+}
+
+### List copies
+GET {{Library.Api_HostAddress}}/api/copies
+Accept: application/json
+
+### Get copy (replace ID)
+GET {{Library.Api_HostAddress}}/api/copies/00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+### Create reader
+POST {{Library.Api_HostAddress}}/api/readers
+Content-Type: application/json
+
+{
+  "name": "Читач"
+}
+
+### Get reader (replace ID)
+GET {{Library.Api_HostAddress}}/api/readers/00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+### Issue loan (replace IDs)
+POST {{Library.Api_HostAddress}}/api/loans
+Content-Type: application/json
+
+{
+  "readerId": "00000000-0000-0000-0000-000000000000",
+  "copyId": "00000000-0000-0000-0000-000000000000",
+  "dueAtUtc": "2026-11-21T12:00:00Z"
+}
+
+### Get loan (replace ID)
+GET {{Library.Api_HostAddress}}/api/loans/00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+### Return loan (replace ID)
+POST {{Library.Api_HostAddress}}/api/loans/00000000-0000-0000-0000-000000000000/return
+
+### Overdue loans
+GET {{Library.Api_HostAddress}}/api/loans/overdue
+Accept: application/json
+
+### Reader history (replace ID)
+GET {{Library.Api_HostAddress}}/api/readers/00000000-0000-0000-0000-000000000000/history
+Accept: application/json
+
+### Reserve copy (replace IDs)
+POST {{Library.Api_HostAddress}}/api/reservations
+Content-Type: application/json
+
+{
+  "readerId": "00000000-0000-0000-0000-000000000000",
+  "copyId": "00000000-0000-0000-0000-000000000000"
+}
+
+### Get reservation (replace ID)
+GET {{Library.Api_HostAddress}}/api/reservations/00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+### Cancel reservation (replace ID)
+POST {{Library.Api_HostAddress}}/api/reservations/00000000-0000-0000-0000-000000000000/cancel
+Content-Type: application/json
+
+{
+  "readerId": "00000000-0000-0000-0000-000000000000"
+}
